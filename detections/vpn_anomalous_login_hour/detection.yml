@@ -1,0 +1,41 @@
+id: DET-0001
+title: VPN login at anomalous hour (per-user circular z-score)
+status: experimental
+author: YOUR NAME
+date: 2026-10-14
+description: >
+  Flags successful VPN logins whose time of day is far from the user's own
+  historical pattern, using circular statistics so midnight wrap is handled.
+  Not expressible in Sigma (statistical baseline), so metadata is custom.
+mitre:
+  tactic: [initial-access, persistence, defense-evasion]
+  technique: [T1078]   # Valid Accounts
+data_sources:
+  - VPN authentication logs (index=vpnlogs)
+required_fields: [_time, user, action, src_ip, src_country]
+platform: splunk
+queries:
+  baseline: baseline.spl
+  detection: detection.spl
+schedule:
+  baseline: daily
+  detection: hourly
+severity: low            # standalone; raise when combined with enrichment (see README)
+parameters:
+  zscore_threshold: 3
+  stdev_floor_hours: 0.5
+  min_baseline_logins: 10
+  baseline_window_days: 30
+false_positives:
+  - Travel across time zones
+  - On-call or incident-response work outside normal hours
+  - Shift changes, schedule changes, new project teams
+  - Users with sparse or irregular logins
+known_gaps:
+  - Attacker who logs in during the victim's normal hours
+  - Users with fewer than min_baseline_logins in the window
+  - Multi-modal schedules (e.g. split shifts) inflate the stdev
+tests:
+  data: test_data/vpn_logs.csv
+  labels: test_data/expected.json
+  command: python tests/test_detection.py

@@ -1,0 +1,12 @@
+```Schedule hourly over the last hour (or daily over the prior day). Requires baseline.spl to have run.```
+index=vpnlogs action=success earliest=-1h@h latest=@h
+| eval hour=tonumber(strftime(_time, "%H")) + tonumber(strftime(_time, "%M"))/60
+| lookup vpn_login_hour_baseline.csv user OUTPUT typical_hour stdev_hour n
+| where isnotnull(typical_hour)
+| eval raw_diff=abs(hour - typical_hour)
+| eval diff=if(raw_diff > 12, 24 - raw_diff, raw_diff)
+| eval zscore=round(diff / stdev_hour, 2)
+| where zscore > 3
+| eval hour=round(hour, 2)
+| table _time user src_ip src_country hour typical_hour stdev_hour zscore n
+| sort - zscore

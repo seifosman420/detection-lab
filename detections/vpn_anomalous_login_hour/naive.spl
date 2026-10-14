@@ -1,0 +1,9 @@
+```Textbook version, kept for comparison only. Do not deploy. See README for its failure modes.```
+index=vpnlogs
+| eval hour=tonumber(strftime(_time, "%H")) + tonumber(strftime(_time, "%M"))/60
+| eventstats avg(hour) AS typical_hour stdev(hour) AS stdev_hour BY user
+| eval zscore=abs(hour - typical_hour) / stdev_hour
+| where zscore > 3
+| eval hour=round(hour, 2), typical_hour=round(typical_hour, 2), stdev_hour=round(stdev_hour, 2), zscore=round(zscore, 2)
+| table _time user src_ip src_country hour typical_hour stdev_hour zscore
+| sort - zscore

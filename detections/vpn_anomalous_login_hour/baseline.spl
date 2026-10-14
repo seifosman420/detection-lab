@@ -1,0 +1,14 @@
+```Schedule daily (e.g. 00:30). Builds per-user circular baseline from the 30 days BEFORE today.```
+```Assumes CIM-style fields: user, action, src_ip, src_country. Adjust index/sourcetype/field names.```
+index=vpnlogs action=success earliest=-31d@d latest=@d
+| eval hour=tonumber(strftime(_time, "%H")) + tonumber(strftime(_time, "%M"))/60
+| eval angle=hour * 2 * pi() / 24
+| eval s=sin(angle), c=cos(angle)
+| stats count AS n avg(s) AS mean_sin avg(c) AS mean_cos BY user
+| where n >= 10
+| eval R=sqrt(mean_sin*mean_sin + mean_cos*mean_cos)
+| eval typical_hour=round(((atan2(mean_sin, mean_cos) * 24 / (2*pi())) + 24) % 24, 2)
+| eval circ_stdev=if(R < 0.0001, 12, sqrt(-2 * ln(R)) * 24 / (2*pi()))
+| eval stdev_hour=round(max(circ_stdev, 0.5), 2)
+| table user n typical_hour stdev_hour
+| outputlookup vpn_login_hour_baseline.csv

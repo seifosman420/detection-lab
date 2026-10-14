@@ -1,0 +1,53 @@
+{
+  "test_date": "2025-01-15",
+  "cases": [
+    {
+      "user": "alice",
+      "hour": 18.5,
+      "should_alert": true,
+      "reason": "5h off a very tight baseline, new country"
+    },
+    {
+      "user": "bob",
+      "hour": 9.3,
+      "should_alert": false,
+      "reason": "ordinary variation"
+    },
+    {
+      "user": "carol",
+      "hour": 23.5,
+      "should_alert": false,
+      "reason": "normal for a night-shift user; naive method mishandles midnight wrap"
+    },
+    {
+      "user": "carol",
+      "hour": 12.0,
+      "should_alert": true,
+      "reason": "noon login for a night-shift user; naive method misses it"
+    },
+    {
+      "user": "dave",
+      "hour": 8.6,
+      "should_alert": false,
+      "reason": "tiny deviation; z-score explodes without a stdev floor"
+    },
+    {
+      "user": "erin",
+      "hour": 3.0,
+      "should_alert": false,
+      "reason": "insufficient baseline (<10 logins): not scored by design"
+    },
+    {
+      "user": "frank",
+      "hour": 14.0,
+      "should_alert": false,
+      "reason": "ordinary variation"
+    },
+    {
+      "user": "bob",
+      "hour": 3.0,
+      "should_alert": false,
+      "reason": "failed login: out of scope, belongs to a brute-force detection"
+    }
+  ]
+}
